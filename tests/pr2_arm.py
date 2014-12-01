@@ -19,11 +19,11 @@ def test_gripper():
     rarm = arm.Arm('right', sim=sim)
     larm = arm.Arm('left', sim=sim)
     
-#     rarm.close_gripper()
-#     larm.close_gripper()
+    rarm.close_gripper()
+    larm.close_gripper()
     
-    rarm.open_gripper()
-    larm.open_gripper()
+#    rarm.open_gripper()
+#    larm.open_gripper()
     
 def test_joints():
     sim = simulator.Simulator(view=True)
