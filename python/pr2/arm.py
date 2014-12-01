@@ -9,6 +9,7 @@ roslib.load_manifest("move_base_msgs")
 import trajectory_msgs.msg as tm
 import sensor_msgs.msg as sm
 import pr2_controllers_msgs.msg as pcm
+#import control_msgs.msg as pcm
 
 
 roslib.load_manifest('tfx')
@@ -16,7 +17,7 @@ import tfx
 import tf.transformations as tft
 
 import openravepy as rave
-import trajoptpy.kin_utils as ku
+#import trajoptpy.kin_utils as ku
 
 from pr2_sim import simulator
 from utils import utils
@@ -282,8 +283,12 @@ class Arm:
         assert pose.frame.count('base_link') == 1
         
         self.sim.update()
-        joints = ku.ik_for_link(np.array(pose.matrix), self.manip, self.tool_frame, 0)
+        pose_mat_world = self.sim.transform_from_to(pose.matrix, pose.frame, 'world')
+        joints = self.sim.ik_for_link(pose_mat_world, self.manip, self.tool_frame, 0)
         
+        if joints is not None:
+            joints = self._closer_joint_angles(joints, self.get_joints())
+            
         return joints
     
     #############
