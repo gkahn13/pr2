@@ -97,15 +97,17 @@ class Arm:
         :param pose_traj: list of tfx.pose
         :param block: if True, waits until trajectory is completed
         :param speed: execution speed in meters/sec
+        :return if not blocking, return expected execution time
         """
         joint_traj = [self.ik(pose) for pose in pose_traj]
-        self.execute_joint_trajectory(joint_traj, block=block, speed=speed)
+        return self.execute_joint_trajectory(joint_traj, block=block, speed=speed)
     
     def execute_joint_trajectory(self, joint_traj, block=True, speed=None):
         """
         :param joint_traj: list of joint waypoints
         :param block: if True, waits until trajectory is completed
         :param speed: execution speed in meters/sec
+        :return if not blocking, return expected execution time
         """
         for joints in joint_traj:
             assert joints is not None
@@ -139,6 +141,8 @@ class Arm:
         
         if block:
             rospy.sleep(time_from_start)
+        else:
+            return time_from_start
         
             
     
@@ -151,28 +155,31 @@ class Arm:
         :param posture: 'untucked', 'tucked', 'up', 'side', 'mantis'
         :param block: if True, waits until trajectory is completed
         :param speed: execution speed in meters/sec
+        :return if not blocking, return expected execution time
         """
         assert posture in self.L_POSTURES.keys()
         
         l_joints = self.L_POSTURES[posture]
         joints = l_joints if self.arm_name == "left" else Arm._mirror_arm_joints(l_joints)
-        self.go_to_joints(joints, block=block, speed=speed)
+        return self.go_to_joints(joints, block=block, speed=speed)
     
     def go_to_pose(self, pose, block=True, speed=None):
         """
         :param pose: tfx.pose
         :param block: if True, waits until trajectory is completed
         :param speed: execution speed in meters/sec
+        :return if not blocking, return expected execution time
         """
-        self.execute_pose_trajectory([pose], block=block, speed=speed)
+        return self.execute_pose_trajectory([pose], block=block, speed=speed)
     
     def go_to_joints(self, joints, block=True, speed=None):
         """
         :param joints: list of joint values
         :param block: if True, waits until trajectory is completed
         :param speed: execution speed in meters/sec
+        :return if not blocking, return expected execution time
         """
-        self.execute_joint_trajectory([joints], block=block, speed=speed)
+        return self.execute_joint_trajectory([joints], block=block, speed=speed)
     
     def close_gripper(self, max_effort=None, block=True):
         """
@@ -203,10 +210,10 @@ class Arm:
         if block:
             timeout = utils.Timeout(10)
             timeout.start()
-            last_grasp = self.current_grasp
+            last_grasp = self.current_grasp + 1e-4 # slight offset to trigger loop
             while(np.abs(self.current_grasp - max(grasp,0)) > .005 and np.abs(last_grasp - self.current_grasp) > 1e-5 and not timeout.has_timed_out()):
                 last_grasp = self.current_grasp
-                rospy.sleep(.01)
+                rospy.sleep(0.5)
         
     def teleop(self):
         rospy.loginfo('{0} arm teleop'.format(self.arm_name))
